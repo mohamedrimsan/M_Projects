@@ -1,0 +1,25 @@
+body{
+    font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: blanchedalmond;
+}
+
+
+header{
+    background-color:beige;
+    color: rgb(222, 22, 22);
+    padding: 15px 0;
+    text-align: center;
+}
+
+nav ul{
+    list-style: circle;
+    padding: 0;
+    color: black;
+}
+
+nav ul li{
+    list-style-type: none;
+    margin: 0 15px;
+}
