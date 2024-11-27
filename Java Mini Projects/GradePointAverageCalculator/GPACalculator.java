@@ -1,4 +1,4 @@
-import java.util.Scanner;
+1import java.util.Scanner;
 
 public class GPACalculator {
     public static void main(String[] args) {
