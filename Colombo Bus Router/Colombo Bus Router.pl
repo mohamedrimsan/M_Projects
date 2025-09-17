@@ -53,7 +53,7 @@ bus(176, dehiwala, kotahena, [dehiwala, 'hill street', karagampitiya, kohuwala, 
 
 bus(180, nittambuwa, fort, [nittambuwa, yakkala, kirillawala, kadawatha, kiribathgoda, fort]).
 
-bus(187/1, ekala, fort, [ekala, 'ja ela', kandana, welisara, wattala, peliyagoda, fort]).
+bus(187, ekala, fort, [ekala, 'ja ela', kandana, welisara, wattala, peliyagoda, fort]).
 
 bus(188, raddolugama, fort, [raddolugama, seeduwa, 'ja ela', kandana, wattala, peliyagoda, fort]).
 
@@ -64,18 +64,29 @@ bus(240, negombo, fort, [negombo, kattunayaka, seeduwa, 'ja ela', kandana, watta
 % -----------------
 % Graph Constructor (it turn the bus details into a grap, like creating a network to connect the cities for path finding)
 % -----------------
-nearbycity(A, B, N) :- 												% Checks if the two cities are directly connected on bus N
+nearbycity(A, B, N) :- 											% Checks if the two cities are directly connected on bus N
     bus(N, _, _, Stops),
     (append(_, [A,B|_], Stops); append(_, [B,A|_], Stops)).
 
-unique_nearbycity(A, B, Bus) :- 									% Picks a deterministic bus for a city pair when multiple buses exist
+unique_nearbycity(A, B, Bus) :- 								% Picks a deterministic bus for a city pair when multiple buses exist
     setof(N, nearbycity(A, B, N), [Bus|_]).
 
-all_stops(Stops) :- 												% Collects a sorted list of all the cities as stops
+all_stops(Stops) :- 									% Collects a sorted list of all the cities as stops
     findall(S, (bus(_,_,_,Ls), member(S, Ls)), All),
     sort(All, Stops).
 
-bus_bus(Bus, Stops) :- bus(Bus, _, _, Stops). 						% Returns all cities as stops for a specific bus
+bus_bus(Bus, Stops) :- bus(Bus, _, _, Stops). 				% Returns all cities as stops for a specific bus
+
+is_sublist(Sub, List) :-						% Checks if all the stops in Sub appear in the same order somewhere in List.
+    append(_, Tmp, List),
+    append(Sub, _, Tmp).
+
+find_direct_bus(Path, Bus) :-						% Finds a bus that travels directly along the given selected route either in the original order or in reverse
+    bus(Bus, _, _, Stops),
+    (   is_sublist(Path, Stops)
+    ;   reverse(Path, RevPath),
+        is_sublist(RevPath, Stops)
+    ).
 
 % -----------------
 % Building Bus list by collected bus number along the path
@@ -172,11 +183,14 @@ astar_search([Path|Queue], Goal, Sol) :-
 
 path_cost(Path, Cost) :- length(Path, L), Cost is L - 1. 		% Number of stops along the path (not count the first stop)
 
-heuristic(A, B, H) :- 											% Estimate distance from current stop to goal
+/* heuristic(A, B, H) :- 						% Estimate distance from current stop to goal (it works for A* Algorithm with real geographical distance data)
     all_stops(Stops),
     nth1(I1, Stops, A),
     nth1(I2, Stops, B),
-    H is abs(I1 - I2).
+    H is abs(I1 - I2). */
+
+heuristic(_, _, 0).
+
 
 sort_paths(Paths, Goal, Sorted) :- 								% A* is faster than BFS and looks into paths with the lowest approximate total cost first,  for large graphs
     findall(F-Path,
@@ -220,20 +234,27 @@ handle_choice(_) :-
     main_menu.
 
 
-find_bus_flow :-											% Let the user find a route from the departure city to the arrival city step-by-step
+find_bus_flow :-										% Let the user find a route from the departure city to the arrival city step-by-step
     all_stops(Stops),										% Listout all availbale cities
     nl, writeln('List of Cities:'),							
-    print_indexed(Stops, 1),								% Print all cities (numbering for easy selection)
+    print_indexed(Stops, 1),									% Print all cities (numbering for easy selection)
     nl, read_index('Enter number for starting city: ', Stops, Start),
     read_index('Enter number for destination city: ', Stops, Goal),
     choose_algorithm_validated(Start, Goal, Algo),
-    ( safe_call(Algo, Start, Goal, Path) ->
-        build_buses(Path, Buses),
-        find_switching(Path, Switching),
-        path_cost(Path, Cost),   		% calculate path cost here
-        format_bus_summary(Path, Buses, Switching, Cost, Summary),
-        nl, writeln(Summary)
-    ; writeln('No bus found for your selected destination.')
+    (   safe_call(Algo, Start, Goal, Path) ->
+        (   											
+            setof(Bus, find_direct_bus(Path, Bus), [DirectBus|_]) ->				% First, try to find a single direct bus for the whole path.
+            path_cost(Path, Cost),
+            format_bus_summary(Path, [DirectBus], [], Cost, Summary),
+            nl, writeln(Summary)
+        ;   											% If no direct bus is found, Suggesting switching options as bus transfers
+            build_buses(Path, Buses),
+            find_switching(Path, Switching),
+            path_cost(Path, Cost),
+            format_bus_summary(Path, Buses, Switching, Cost, Summary),
+            nl, writeln(Summary)
+        )
+    ;   writeln('No bus found for your selected destination.')
     ).
 
 
