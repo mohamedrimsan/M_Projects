@@ -1,4 +1,4 @@
-% Project Course:- COU4303 Artificial Intelligence
+% Course:- COU4303 Artificial Intelligence
 
 % Developed By:- Group 25, BSc IT Students 23/24 Batch.
 
@@ -10,10 +10,10 @@
 
 
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-% Colombo Bus Route Guider
+% Colombo City Bus Route Guider
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-:- use_module(library(lists)). 					 % it's used to imports the SWI-Prolog’s built-in list utilities like List manipulation, path building, stop collection
+:- use_module(library(lists)). 				% It is helpful to import SWI-Prolog's built-in list utilities, such as list manipulation, path building, and stop collection.
 :- use_module(library(readutil)).				 % Reading the menu input as a plain strings
 :- use_module(library(pairs)). 					 % Sorting paths by A* algorithm cost
 
@@ -211,7 +211,7 @@ run :- main_menu.											% Entry point, starts the main menu
 
 main_menu :-    											% Display the main menu options and reads user inputs as string and pass it to handle_choice 
     nl, writeln('=============================='),
-    writeln(' Colombo Bus Route Guider '),
+    writeln(' Colombo City Bus Route Guider '),
     writeln('=============================='),
 	writeln(' Please Choose your preference from the main menu: '),
     writeln('1) Find a bus'),
@@ -228,9 +228,9 @@ handle_choice("2") :-
     show_all_buses,
     main_menu.
 handle_choice("3") :-
-    writeln('Goodbye! Thank you for using our application'), !.
+    writeln('Goodbye! Thank you for using Colombo City Bus Route Guider' ), !.
 handle_choice(_) :-
-    writeln('Invalid choice. Please select 1, 2 or 3.'),
+    writeln('Invalid choice. Please select correct option : 1, 2 or 3.'),
     main_menu.
 
 
@@ -254,7 +254,7 @@ find_bus_flow :-										% Let the user find a route from the departure city to
             format_bus_summary(Path, Buses, Switching, Cost, Summary),
             nl, writeln(Summary)
         )
-    ;   writeln('No bus found for your selected destination.')
+    ;   writeln('No bus found for your selected city.')
     ).
 
 
@@ -263,7 +263,7 @@ choose_algorithm_validated(Start, Goal, Algo) :-			% Ensure the user selects a p
     choose_algorithm(UserAlgo),								% Prompt user for an algorithm choice
     ( safe_call(UserAlgo, Start, Goal, _) ->				% Test if the algorithm works safely
         Algo = UserAlgo, !        							% (!) stops the loop when a suitable algorithm is found and the chosen algorithm is valid
-    ; writeln('The Travel Option you selected is not suitable for this route. Please choose another Travel Option.'),
+    ; writeln('The travel option you selected is not suitable for this route. Please choose another travel option.'),
       fail                       							% Continue the repeat loop
     ).
 
@@ -300,7 +300,7 @@ format_bus_summary(Path, Buses, Switching, Cost, Summary) :-        % Creates a 
         [PathStr, BusesStr, Cost, TStr]).
 
 
-mark_switching_in_path([], _, []). 				     				% Adds "(Transfer)" label to stops where switching occur
+mark_switching_in_path([], _, []). 				     				% Adds Transfer label to stops where bus switching needs
 mark_switching_in_path([Stop|Rest], Switching, [MarkedStop|MarkedRest]) :-
     ( member(transfer(Stop, _, _), Switching)
     -> atomic_list_concat([Stop, ' (Transfer)'], '', MarkedStop)
@@ -329,7 +329,7 @@ read_index(Prompt, List, Elem) :- 									% Reads and validates user selection 
     (   catch(number_string(N, S), _, fail),
         N >= 1, nth1(N, List, Elem)
     ->  true
-    ;   writeln('Invalid index, try again.'), fail
+    ;   writeln('Invalid input, please try again.'), fail
     ).
 
 print_stops_arrow([X]) :- format('~w~n', [X]). 						% Prints stops in arrow format for clarity
